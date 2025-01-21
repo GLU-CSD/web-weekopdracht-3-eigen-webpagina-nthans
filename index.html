@@ -6,10 +6,293 @@
     <title>My project title</title>
     <link rel="shortcut icon" type="image/png" href="/assets/favicon.png">
     <link rel="stylesheet" href="style.css">
-    <!-- <script src="CDN library url"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
     <script defer src="main.js"></script>
 </head>
 <body>
-    <h1>Hello world!</h1>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #222;
+      font-family: 'Russo One', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    .container {
+      position: relative;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 40px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    .tab-button {
+      background-color: transparent;
+      color: #fff;
+      font-size: 24px;
+      padding: 15px 40px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+      transition: all 0.3s ease;
+    }
+
+    .tab-button:hover {
+      background-color: #f44336;
+      box-shadow: 0 0 25px rgba(255, 0, 0, 0.9);
+      transform: scale(1.05);
+    }
+
+    .tab-button:active {
+      transform: scale(0.98);
+    }
+
+    /* Content Screens */
+    .content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 10px;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .content.active {
+      opacity: 1;
+      visibility: visible;
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* New Game, Load Game, Config Pages */
+    .new-game-page, .load-game-page, .config-page {
+      display: none;
+    }
+
+    .new-game-page.active, .load-game-page.active, .config-page.active {
+      display: block;
+    }
+
+    /* Animated Background Shapes */
+    .background-shapes {
+      position: absolute;
+      top: -10%;
+      left: -10%;
+      z-index: -1;
+      width: 120%;
+      height: 120%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .background-shape {
+      position: absolute;
+      border-radius: 50%;
+      background-color: rgba(255, 0, 0, 0.6);
+      filter: blur(80px);
+      animation: moveShapes 5s ease-in-out infinite;
+    }
+
+    .shape1 {
+      width: 400px;
+      height: 400px;
+      top: 0;
+      left: 0;
+    }
+
+    .shape2 {
+      width: 600px;
+      height: 600px;
+      top: 60%;
+      right: -30%;
+    }
+
+    .shape3 {
+      width: 500px;
+      height: 500px;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    @keyframes moveShapes {
+      0% { transform: translateY(0) translateX(0); }
+      50% { transform: translateY(-20px) translateX(20px); }
+      100% { transform: translateY(0) translateX(0); }
+    }
+
+    /* Button Layout Changes */
+    .tabs.new-layout {
+      flex-direction: row;
+      gap: 20px;
+      top: 20%;
+    }
+
+    .tabs.new-layout .tab-button {
+      width: 200px;
+      font-size: 22px;
+      padding: 12px 30px;
+    }
+  </style>
+
+  <!-- Audio Element for "Last Surprise" -->
+  <audio id="background-music" loop>
+    <source src="https://www.youtube.com/watch?v=cS_CPy7YcaA" type="audio/mp3">
+  </audio>
+
+  <div class="container">
+    <h1 id="gameTitle">Persona 5 Royale</h1>
+
+    <div class="tabs">
+      <button class="tab-button" id="new-game">New Game</button>
+      <button class="tab-button" id="load-game">Load Game</button>
+      <button class="tab-button" id="config">Config</button>
+    </div>
+
+    <!-- Content Screens (hidden by default) -->
+    <div id="new-game-content" class="content new-game-page">
+      <h2>Start a New Game</h2>
+      <p>Are you ready to become a Phantom Thief?</p>
+      <button id="start-new-game">Start New Game</button>
+      <button id="cancel-new-game">Cancel</button>
+    </div>
+
+    <div id="load-game-content" class="content load-game-page">
+      <h2>Load Game</h2>
+      <div class="save-slot">Save Slot 1 - 80% Progress</div>
+      <div class="save-slot">Save Slot 2 - 45% Progress</div>
+      <div class="save-slot">Save Slot 3 - 60% Progress</div>
+    </div>
+
+    <div id="config-content" class="content config-page">
+      <h2>Settings</h2>
+      <p>Adjust the game settings here.</p>
+      <button>Volume</button>
+      <button>Graphics</button>
+      <button>Controls</button>
+    </div>
+
+    <!-- New Game Interactive Screen -->
+    <div id="new-game-screen" class="content">
+      <h3>Welcome to the world of Phantom Thieves!</h3>
+      <p>Your adventure begins here. Are you sure you're ready?</p>
+      <button>Yes, Start Adventure</button>
+      <button>No, Go Back</button>
+    </div>
+
+    <!-- Animated Background Shapes -->
+    <div class="background-shapes">
+      <div class="background-shape shape1"></div>
+      <div class="background-shape shape2"></div>
+      <div class="background-shape shape3"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.1/gsap.min.js"></script>
+  <script>
+    // Play the background music when the page loads
+    window.onload = function() {
+      const music = document.getElementById('background-music');
+      music.play();  // Start playing the audio
+    };
+
+    // GSAP Animations for Button Hover
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(button => {
+      button.addEventListener('mouseenter', () => {
+        gsap.to(button, { scale: 1.1, duration: 0.3, boxShadow: '0 0 30px rgba(255, 0, 0, 0.9)' });
+      });
+      button.addEventListener('mouseleave', () => {
+        gsap.to(button, { scale: 1, duration: 0.3, boxShadow: '0 0 15px rgba(255, 0, 0, 0.7)' });
+      });
+    });
+
+    // Slide animations for content transition
+    const switchContent = (contentId, direction) => {
+      const allContents = document.querySelectorAll('.content');
+      allContents.forEach(content => content.classList.remove('active'));
+
+      const selectedContent = document.getElementById(contentId);
+      selectedContent.classList.add('active');
+
+      // Animate transition of content and buttons
+      gsap.fromTo('.container', 
+        { x: direction === 'right' ? '100%' : '-100%' },
+        { x: '0%', duration: 0.6, ease: 'power2.out' });
+
+      // Change the button layout based on content
+      const tabs = document.querySelector('.tabs');
+      if (contentId === 'new-game-content') {
+        gsap.to(tabs, { duration: 0.5, ease: 'power2.out', top: '20%', left: '50%', transform: 'translateX(-50%)' });
+        tabs.classList.add('new-layout');
+      } else {
+        gsap.to(tabs, { duration: 0.5, ease: 'power2.out', top: '50%' });
+        tabs.classList.remove('new-layout');
+      }
+    };
+
+    // Event listeners for tabs (triggering page slides)
+    document.getElementById('new-game').addEventListener('click', () => {
+      document.getElementById('gameTitle').textContent = '';  // Delete the text content
+      switchContent('new-game-content', 'right');
+    });
+    document.getElementById('load-game').addEventListener('click', () => {
+      document.getElementById('gameTitle').textContent = '';  // Delete the text content
+      switchContent('load-game-content', 'left');
+    });
+    document.getElementById('config').addEventListener('click', () => {
+      document.getElementById('gameTitle').textContent = '';  // Delete the text content
+      switchContent('config-content', 'right');
+    });
+
+    // Interactive screen for New Game
+    document.getElementById('start-new-game').addEventListener('click', () => {
+      document.getElementById('new-game-screen').classList.add('active');
+    });
+
+    document.getElementById('cancel-new-game').addEventListener('click', () => {
+      document.getElementById('new-game-content').classList.remove('active');
+    });
+  </script>
+
 </body>
 </html>
